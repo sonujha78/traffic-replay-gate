@@ -1,0 +1,76 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        run: test -z "$(gofmt -l .)"
+      - name: vet
+        run: go vet ./...
+      - name: unit tests
+        run: go test ./... -race -count=1
+
+  # Proves the gate itself works: good versions must pass, bad versions must fail.
+  self-test:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { version: v1, expect: pass }
+          - { version: v2, expect: pass }
+          - { version: v2-bad, expect: fail }
+          - { version: v2-slow, expect: fail }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build the gate
+        run: go build -o bin/gate ./cmd/gate
+      - name: Start ${{ matrix.version }}
+        run: |
+          APP_VERSION=${{ matrix.version }} docker compose up -d --build
+          for i in $(seq 1 30); do
+            curl -fsS localhost:18000/health && break
+            sleep 2
+          done
+          curl -fsS localhost:18000/health
+      - name: Replay and check that the verdict is "${{ matrix.expect }}"
+        run: |
+          set +e
+          ./bin/gate replay \
+            --target http://localhost:18000 \
+            --golden golden/shop-api-v1.jsonl \
+            --header "Authorization=Bearer demo-token-123" \
+            --out-dir reports/out
+          code=$?
+          set -e
+          want=0
+          if [ "${{ matrix.expect }}" = "fail" ]; then want=1; fi
+          if [ "$code" -ne "$want" ]; then
+            echo "expected exit code $want for ${{ matrix.version }}, got $code"
+            exit 1
+          fi
+          echo "${{ matrix.version }}: verdict is ${{ matrix.expect }} as expected"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: report-${{ matrix.version }}
+          path: reports/out/
+          if-no-files-found: ignore
