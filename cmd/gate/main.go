@@ -29,6 +29,8 @@ func main() {
 	switch os.Args[1] {
 	case "record":
 		os.Exit(runRecord(os.Args[2:]))
+	case "replay":
+		os.Exit(runReplay(os.Args[2:]))
 	case "version":
 		fmt.Println("gate", version)
 	default:
@@ -42,6 +44,7 @@ func usage() {
 
 commands:
   record   run a recording proxy in front of a service and save a golden set
+  replay   replay a golden set against a candidate version and decide pass or fail
   version  print the version`)
 }
 

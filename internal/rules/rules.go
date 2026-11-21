@@ -40,6 +40,7 @@ type Endpoint struct {
 	Match           string   `yaml:"match"` // for example "GET /orders/*"
 	IgnoreFields    []string `yaml:"ignore_fields"`
 	UnorderedArrays []string `yaml:"unordered_arrays"`
+	CaptureFields   []string `yaml:"capture_fields"`
 }
 
 type Latency struct {
@@ -146,6 +147,7 @@ type Scope struct {
 	Endpoint        string // label used to group latency, for example "GET /orders/*"
 	IgnoreFields    []string
 	UnorderedArrays []string
+	CaptureFields   []string // response fields whose value is remembered for later requests
 }
 
 // For returns the scope for a request: global settings plus the first matching endpoint rule.
@@ -160,6 +162,7 @@ func (r *Rules) For(method, path string) Scope {
 			s.Endpoint = strings.TrimSpace(e.Match)
 			s.IgnoreFields = append(s.IgnoreFields, e.IgnoreFields...)
 			s.UnorderedArrays = append(s.UnorderedArrays, e.UnorderedArrays...)
+			s.CaptureFields = append(s.CaptureFields, e.CaptureFields...)
 			break
 		}
 	}

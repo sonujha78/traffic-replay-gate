@@ -24,6 +24,7 @@ latency:
 endpoints:
   - match: "POST /orders"
     ignore_fields: [id, created_at]
+    capture_fields: [id]   # later requests use the new id instead of the recorded one
   - match: "GET /orders/*"
     ignore_fields: [id, created_at]
   - match: "GET /users/me"
