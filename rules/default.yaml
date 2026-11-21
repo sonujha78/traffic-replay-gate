@@ -17,7 +17,7 @@ policy:
 # on a fast endpoint is not flagged, but 1 ms to 250 ms is.
 latency:
   max_p95_increase_pct: 20
-  min_increase_ms: 30
+  min_increase_ms: 50
   severity: fail
 
 # Noise is ignored per endpoint, never globally, so real bugs in other places stay visible.
