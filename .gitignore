@@ -1,0 +1,14 @@
+# Go
+bin/
+*.exe
+*.test
+*.out
+vendor/
+# Python
+__pycache__/
+*.pyc
+.venv/
+# Project output
+reports/out/
+*.log
+.DS_Store

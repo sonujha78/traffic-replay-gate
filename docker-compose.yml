@@ -1,0 +1,9 @@
+services:
+  shop-api:
+    build: ./demo/shop-api
+    image: trg-shop-api:dev
+    container_name: trg-shop-api
+    environment:
+      APP_VERSION: ${APP_VERSION:-v1}
+    ports:
+      - "18000:8000"
