@@ -1,0 +1,30 @@
+# What counts as a regression, and what is just noise.
+
+# Response headers that are compared. Everything else (Date, X-Request-Id, ...) is ignored.
+compare_headers: [Content-Type]
+
+# fail = blocks the pull request, warn = shown in the report only, ignore = hidden
+policy:
+  status_change: fail
+  removed_field: fail
+  type_change: fail
+  value_change: fail
+  added_field: warn
+  header_change: warn
+  request_error: fail
+
+# A latency regression needs BOTH limits exceeded, so a jump from 1 ms to 2 ms
+# on a fast endpoint is not flagged, but 1 ms to 250 ms is.
+latency:
+  max_p95_increase_pct: 20
+  min_increase_ms: 30
+  severity: fail
+
+# Noise is ignored per endpoint, never globally, so real bugs in other places stay visible.
+endpoints:
+  - match: "POST /orders"
+    ignore_fields: [id, created_at]
+  - match: "GET /orders/*"
+    ignore_fields: [id, created_at]
+  - match: "GET /users/me"
+    ignore_fields: [last_login]
